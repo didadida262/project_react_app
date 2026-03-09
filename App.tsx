@@ -5,7 +5,9 @@ import {
   View,
   Pressable,
   useColorScheme,
+  Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 
@@ -83,24 +85,42 @@ export default function App() {
     });
   }, []);
 
+  // 炫酷渐变背景色（深紫 → 深蓝 → 青）
+  const gradientColors =
+    colorScheme === 'dark'
+      ? ['#0f0a1f', '#1a0a2e', '#0c1929', '#0e7490']
+      : ['#f0f9ff', '#e0f2fe', '#fafafa'];
+
   if (!ready) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.bg }]}>
-        <Text style={[styles.counterValue, { color: theme.text }]}>0</Text>
+      <LinearGradient
+        colors={gradientColors}
+        style={styles.container}
+        locations={[0, 0.4, 0.7, 1]}
+      >
+        <Text selectable={false} style={[styles.counterValue, { color: theme.text }]}>
+          0
+        </Text>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.bg }]}>
+    <LinearGradient
+      colors={gradientColors}
+      style={styles.container}
+      locations={[0, 0.4, 0.7, 1]}
+    >
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={styles.content}>
-        <Text style={[styles.label, { color: theme.textMuted }]}>
+        <Text selectable={false} style={[styles.label, { color: theme.textMuted }]}>
           当前计数值
         </Text>
-        <Text style={[styles.counterValue, { color: theme.text }]}>{count}</Text>
+        <Text selectable={false} style={[styles.counterValue, { color: theme.text }]}>
+          {count}
+        </Text>
       </View>
 
       <Pressable
@@ -115,11 +135,11 @@ export default function App() {
         ]}
         android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
       >
-        <Text style={[styles.buttonText, { color: theme.buttonText }]}>
+        <Text selectable={false} style={[styles.buttonText, { color: theme.buttonText }]}>
           +1 点击加一
         </Text>
       </Pressable>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -156,5 +176,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: '600',
+    ...(Platform.OS === 'web' && { userSelect: 'none' } as const),
   },
 });
