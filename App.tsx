@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   StyleSheet,
   Text,
   View,
@@ -61,6 +62,7 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? colors.dark : colors.light;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
 
   // 启动时从本地恢复计数值
   useEffect(() => {
@@ -76,17 +78,37 @@ export default function App() {
     };
   }, []);
 
-  // 点击加一，并持久化
+  // 数字抖动动画（加一时触发）
+  const runShake = useCallback(() => {
+    const duration = 45;
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: -12, duration, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 6, duration, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -4, duration, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration, useNativeDriver: true }),
+    ]).start();
+  }, [shakeAnim]);
+
+  // 点击加一，并持久化 + 抖动
   const handleIncrement = useCallback(() => {
     setCount((prev) => {
       const next = prev + 1;
       saveCount(next);
       return next;
     });
+    runShake();
+  }, [runShake]);
+
+  // 清零并持久化
+  const handleReset = useCallback(() => {
+    setCount(0);
+    saveCount(0);
   }, []);
 
   // 炫酷渐变背景色（深紫 → 深蓝 → 青）
-  const gradientColors =
+  const gradientColors: readonly [string, string, ...string[]] =
     colorScheme === 'dark'
       ? ['#0f0a1f', '#1a0a2e', '#0c1929', '#0e7490']
       : ['#f0f9ff', '#e0f2fe', '#fafafa'];
@@ -114,31 +136,55 @@ export default function App() {
     >
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
 
-      <View style={styles.content}>
+      <Animated.View
+        style={[
+          styles.content,
+          { transform: [{ translateX: shakeAnim }] },
+        ]}
+      >
         <Text selectable={false} style={[styles.label, { color: theme.textMuted }]}>
           当前计数值
         </Text>
         <Text selectable={false} style={[styles.counterValue, { color: theme.text }]}>
           {count}
         </Text>
-      </View>
+      </Animated.View>
 
-      <Pressable
-        onPress={handleIncrement}
-        style={({ pressed }) => [
-          styles.button,
-          {
-            backgroundColor: theme.buttonBg,
-            borderColor: theme.accentBorder,
-            opacity: pressed ? 0.85 : 1,
-          },
-        ]}
-        android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
-      >
-        <Text selectable={false} style={[styles.buttonText, { color: theme.buttonText }]}>
-          +1 点击加一
-        </Text>
-      </Pressable>
+      <View style={styles.buttons}>
+        <Pressable
+          onPress={handleIncrement}
+          style={({ pressed }) => [
+            styles.button,
+            styles.buttonPrimary,
+            {
+              backgroundColor: theme.buttonBg,
+              borderColor: theme.accentBorder,
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+          android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
+        >
+          <Text selectable={false} style={[styles.buttonText, { color: theme.buttonText }]}>
+            计数
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={handleReset}
+          style={({ pressed }) => [
+            styles.button,
+            styles.buttonReset,
+            {
+              borderColor: theme.textMuted,
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+          android_ripple={{ color: 'rgba(255,255,255,0.15)' }}
+        >
+          <Text selectable={false} style={[styles.buttonText, { color: theme.textMuted }]}>
+            Reset
+          </Text>
+        </Pressable>
+      </View>
     </LinearGradient>
   );
 }
@@ -152,7 +198,15 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 40,
+  },
+  buttons: {
+    gap: 12,
+    alignItems: 'center',
+  },
+  buttonPrimary: {},
+  buttonReset: {
+    backgroundColor: 'transparent',
   },
   label: {
     fontSize: 14,
