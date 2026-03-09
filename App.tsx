@@ -107,33 +107,40 @@ export default function App() {
     saveCount(0);
   }, []);
 
-  // 炫酷渐变背景色（深紫 → 深蓝 → 青）
+  // 炫酷渐变背景色（深紫 → 深蓝 → 青）；浅色模式也做明显渐变便于手机端可见
   const gradientColors: readonly [string, string, ...string[]] =
     colorScheme === 'dark'
       ? ['#0f0a1f', '#1a0a2e', '#0c1929', '#0e7490']
-      : ['#f0f9ff', '#e0f2fe', '#fafafa'];
+      : ['#e0e7ff', '#c7d2fe', '#a5b4fc', '#818cf8'];
+
+  const fallbackBg = colorScheme === 'dark' ? '#0f0a1f' : '#e0e7ff';
 
   if (!ready) {
     return (
-      <LinearGradient
-        colors={gradientColors}
-        style={styles.container}
-        locations={[0, 0.4, 0.7, 1]}
-      >
-        <Text selectable={false} style={[styles.counterValue, { color: theme.text }]}>
-          0
-        </Text>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      </LinearGradient>
+      <View style={[styles.container, { backgroundColor: fallbackBg }]}>
+        <LinearGradient
+          colors={gradientColors}
+          style={StyleSheet.absoluteFill}
+          locations={[0, 0.4, 0.7, 1]}
+        />
+        <View style={styles.overlay}>
+          <Text selectable={false} style={[styles.counterValue, { color: theme.text }]}>
+            0
+          </Text>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        </View>
+      </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={gradientColors}
-      style={styles.container}
-      locations={[0, 0.4, 0.7, 1]}
-    >
+    <View style={[styles.container, { backgroundColor: fallbackBg }]}>
+      <LinearGradient
+        colors={gradientColors}
+        style={StyleSheet.absoluteFill}
+        locations={[0, 0.4, 0.7, 1]}
+      />
+      <View style={styles.overlay}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
 
       <Animated.View
@@ -185,12 +192,16 @@ export default function App() {
           </Text>
         </Pressable>
       </View>
-    </LinearGradient>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  overlay: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
